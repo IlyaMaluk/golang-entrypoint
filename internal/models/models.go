@@ -15,10 +15,10 @@ type Teacher struct {
 }
 
 type Course struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	TeacherID   int    `json:"teacher_id"`
+	ID          int
+	Title       string
+	Description string
+	TeacherID   int
 }
 
 type Enrollment struct {

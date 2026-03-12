@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"golang-entrypoint/internal/service"
 	"log"
 	"log/slog"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"golang-entrypoint/internal/database"
 	"golang-entrypoint/internal/handlers"
 	"golang-entrypoint/internal/repository"
+	_ "golang-entrypoint/internal/service"
 	"golang-entrypoint/pkg/middleware"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -53,9 +55,11 @@ func main() {
 	courseRepo := repository.NewCourseRepository(db)
 	enrollmentRepo := repository.NewEnrollmentRepository(db)
 
+	courseService := service.NewCourseService(courseRepo)
+
 	studentHandler := handlers.NewStudentHandler(studentRepo)
 	teacherHandler := handlers.NewTeacherHandler(teacherRepo)
-	courseHandler := handlers.NewCourseHandler(courseRepo)
+	courseHandler := handlers.NewCourseHandler(courseService)
 	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentRepo)
 
 	mux := http.NewServeMux()

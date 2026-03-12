@@ -30,11 +30,10 @@ migrate-down:
 	migrate -path $(MIGRATIONS_DIR) -database $(DB_URL) down -all
 
 docker-up:
-	docker compose up --build
+	docker compose -f build/docker-compose.yml up --build
 
 docker-down:
-	docker compose down -v
+	docker compose -f build/docker-compose.yml down -v
 
 clean:
 	rm -rf bin/
-	rm -rf docs/
