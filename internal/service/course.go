@@ -3,18 +3,24 @@ package service
 import (
 	"golang-entrypoint/internal/domain"
 	"golang-entrypoint/internal/models"
-	"golang-entrypoint/internal/repository"
 )
 
-type CourseService struct {
-	repo *repository.CourseRepository
+type CourseRepository interface {
+	CreateCourse(c *models.Course) (int, error)
+	GetCourseByID(id int) (*models.Course, error)
+	GetAllCourses() ([]models.Course, error)
+	UpdateCourse(c *models.Course) error
+	DeleteCourse(id int) error
 }
 
-func NewCourseService(repo *repository.CourseRepository) *CourseService {
-	return &CourseService{repo: repo}
+type CourseServiceImpl struct {
+	repo CourseRepository
 }
 
-// Функції для конвертації моделей
+func NewCourseService(repo CourseRepository) *CourseServiceImpl {
+	return &CourseServiceImpl{repo: repo}
+}
+
 func mapCourseToDB(d *domain.Course) *models.Course {
 	return &models.Course{
 		ID:          d.ID,
@@ -33,28 +39,28 @@ func mapCourseToDomain(m *models.Course) *domain.Course {
 	}
 }
 
-// Бізнес-логіка
-func (s *CourseService) CreateCourse(req *domain.Course) error {
+func (s *CourseServiceImpl) CreateCourse(req *domain.Course) (*domain.Course, error) {
 	dbModel := mapCourseToDB(req)
 
-	if err := s.repo.CreateCourse(dbModel); err != nil {
-		return err
-	}
-
-	req.ID = dbModel.ID
-	return nil
-}
-
-func (s *CourseService) GetCourseByID(id int) (*domain.Course, error) {
-	dbModel, err := s.repo.GetCourseByID(id)
+	id, err := s.repo.CreateCourse(dbModel)
 	if err != nil {
 		return nil, err
 	}
 
+	res := *req
+	res.ID = id
+	return &res, nil
+}
+
+func (s *CourseServiceImpl) GetCourseByID(id int) (*domain.Course, error) {
+	dbModel, err := s.repo.GetCourseByID(id)
+	if err != nil {
+		return nil, err
+	}
 	return mapCourseToDomain(dbModel), nil
 }
 
-func (s *CourseService) GetAllCourses() ([]domain.Course, error) {
+func (s *CourseServiceImpl) GetAllCourses() ([]domain.Course, error) {
 	dbModels, err := s.repo.GetAllCourses()
 	if err != nil {
 		return nil, err
@@ -66,16 +72,23 @@ func (s *CourseService) GetAllCourses() ([]domain.Course, error) {
 	}
 
 	if domainCourses == nil {
-		domainCourses = []domain.Course{} // Щоб в JSON повертався [] замість null
+		domainCourses = []domain.Course{}
 	}
-
 	return domainCourses, nil
 }
 
-func (s *CourseService) UpdateCourse(req *domain.Course) error {
-	return s.repo.UpdateCourse(mapCourseToDB(req))
+func (s *CourseServiceImpl) UpdateCourse(req *domain.Course) (*domain.Course, error) {
+	if err := s.repo.UpdateCourse(mapCourseToDB(req)); err != nil {
+		return nil, err
+	}
+
+	res := *req
+	return &res, nil
 }
 
-func (s *CourseService) DeleteCourse(id int) error {
-	return s.repo.DeleteCourse(id)
+func (s *CourseServiceImpl) DeleteCourse(id int) (int, error) {
+	if err := s.repo.DeleteCourse(id); err != nil {
+		return 0, err
+	}
+	return id, nil
 }
