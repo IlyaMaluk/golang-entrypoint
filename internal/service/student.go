@@ -9,7 +9,7 @@ type StudentRepository interface {
 	CreateStudent(s *models.Student) (int, error)
 	GetStudentByID(id int) (*models.Student, error)
 	GetAllStudents() ([]models.Student, error)
-	UpdateStudent(s *models.Student) error
+	UpdateStudent(s *models.Student) (*models.Student, error)
 	DeleteStudent(id int) error
 }
 
@@ -79,16 +79,11 @@ func (s *StudentServiceImpl) GetAllStudents() ([]domain.Student, error) {
 }
 
 func (s *StudentServiceImpl) UpdateStudent(req *domain.Student) (*domain.Student, error) {
-	if err := s.repo.UpdateStudent(mapStudentToDB(req)); err != nil {
+	updatedDBModel, err := s.repo.UpdateStudent(mapStudentToDB(req))
+	if err != nil {
 		return nil, err
 	}
-
-	return &domain.Student{
-		ID:        req.ID,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Email:     req.Email,
-	}, nil
+	return mapStudentToDomain(updatedDBModel), nil
 }
 
 func (s *StudentServiceImpl) DeleteStudent(id int) (int, error) {

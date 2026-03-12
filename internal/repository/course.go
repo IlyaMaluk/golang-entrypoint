@@ -52,10 +52,16 @@ func (r *CourseRepository) GetAllCourses() ([]models.Course, error) {
 	return courses, nil
 }
 
-func (r *CourseRepository) UpdateCourse(c *models.Course) error {
-	query := `UPDATE courses SET title = $1, description = $2, teacher_id = $3 WHERE id = $4`
-	_, err := r.db.Exec(query, c.Title, c.Description, c.TeacherID, c.ID)
-	return err
+func (r *CourseRepository) UpdateCourse(c *models.Course) (*models.Course, error) {
+	query := `UPDATE courses SET title = $1, description = $2, teacher_id = $3 WHERE id = $4 RETURNING id, title, description, teacher_id`
+	updated := &models.Course{}
+	err := r.db.QueryRow(query, c.Title, c.Description, c.TeacherID, c.ID).Scan(
+		&updated.ID, &updated.Title, &updated.Description, &updated.TeacherID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *CourseRepository) DeleteCourse(id int) error {

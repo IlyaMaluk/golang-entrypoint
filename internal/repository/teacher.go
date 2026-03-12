@@ -52,10 +52,16 @@ func (r *TeacherRepository) GetAllTeachers() ([]models.Teacher, error) {
 	return teachers, nil
 }
 
-func (r *TeacherRepository) UpdateTeacher(t *models.Teacher) error {
-	query := `UPDATE teachers SET first_name = $1, last_name = $2, department = $3 WHERE id = $4`
-	_, err := r.db.Exec(query, t.FirstName, t.LastName, t.Department, t.ID)
-	return err
+func (r *TeacherRepository) UpdateTeacher(t *models.Teacher) (*models.Teacher, error) {
+	query := `UPDATE teachers SET first_name = $1, last_name = $2, department = $3 WHERE id = $4 RETURNING id, first_name, last_name, department`
+	updated := &models.Teacher{}
+	err := r.db.QueryRow(query, t.FirstName, t.LastName, t.Department, t.ID).Scan(
+		&updated.ID, &updated.FirstName, &updated.LastName, &updated.Department,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *TeacherRepository) DeleteTeacher(id int) error {

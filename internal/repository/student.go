@@ -52,10 +52,16 @@ func (r *StudentRepository) GetAllStudents() ([]models.Student, error) {
 	return students, nil
 }
 
-func (r *StudentRepository) UpdateStudent(s *models.Student) error {
-	query := `UPDATE students SET first_name = $1, last_name = $2, email = $3 WHERE id = $4`
-	_, err := r.db.Exec(query, s.FirstName, s.LastName, s.Email, s.ID)
-	return err
+func (r *StudentRepository) UpdateStudent(s *models.Student) (*models.Student, error) {
+	query := `UPDATE students SET first_name = $1, last_name = $2, email = $3 WHERE id = $4 RETURNING id, first_name, last_name, email`
+	updated := &models.Student{}
+	err := r.db.QueryRow(query, s.FirstName, s.LastName, s.Email, s.ID).Scan(
+		&updated.ID, &updated.FirstName, &updated.LastName, &updated.Email,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
 func (r *StudentRepository) DeleteStudent(id int) error {

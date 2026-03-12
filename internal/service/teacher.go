@@ -9,7 +9,7 @@ type TeacherRepository interface {
 	CreateTeacher(t *models.Teacher) (int, error)
 	GetTeacherByID(id int) (*models.Teacher, error)
 	GetAllTeachers() ([]models.Teacher, error)
-	UpdateTeacher(t *models.Teacher) error
+	UpdateTeacher(t *models.Teacher) (*models.Teacher, error)
 	DeleteTeacher(id int) error
 }
 
@@ -79,16 +79,11 @@ func (s *TeacherServiceImpl) GetAllTeachers() ([]domain.Teacher, error) {
 }
 
 func (s *TeacherServiceImpl) UpdateTeacher(req *domain.Teacher) (*domain.Teacher, error) {
-	if err := s.repo.UpdateTeacher(mapTeacherToDB(req)); err != nil {
+	updatedDBModel, err := s.repo.UpdateTeacher(mapTeacherToDB(req))
+	if err != nil {
 		return nil, err
 	}
-
-	return &domain.Teacher{
-		ID:         req.ID,
-		FirstName:  req.FirstName,
-		LastName:   req.LastName,
-		Department: req.Department,
-	}, nil
+	return mapTeacherToDomain(updatedDBModel), nil
 }
 
 func (s *TeacherServiceImpl) DeleteTeacher(id int) (int, error) {

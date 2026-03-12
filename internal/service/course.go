@@ -9,7 +9,7 @@ type CourseRepository interface {
 	CreateCourse(c *models.Course) (int, error)
 	GetCourseByID(id int) (*models.Course, error)
 	GetAllCourses() ([]models.Course, error)
-	UpdateCourse(c *models.Course) error
+	UpdateCourse(c *models.Course) (*models.Course, error)
 	DeleteCourse(id int) error
 }
 
@@ -81,16 +81,11 @@ func (s *CourseServiceImpl) GetAllCourses() ([]domain.Course, error) {
 }
 
 func (s *CourseServiceImpl) UpdateCourse(req *domain.Course) (*domain.Course, error) {
-	if err := s.repo.UpdateCourse(mapCourseToDB(req)); err != nil {
+	updatedDBModel, err := s.repo.UpdateCourse(mapCourseToDB(req))
+	if err != nil {
 		return nil, err
 	}
-
-	return &domain.Course{
-		ID:          req.ID,
-		Title:       req.Title,
-		Description: req.Description,
-		TeacherID:   req.TeacherID,
-	}, nil
+	return mapCourseToDomain(updatedDBModel), nil
 }
 
 func (s *CourseServiceImpl) DeleteCourse(id int) (int, error) {
