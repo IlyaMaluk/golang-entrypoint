@@ -3,16 +3,19 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-
-	"golang-entrypoint/internal/repository"
 )
 
-type EnrollmentHandler struct {
-	repo *repository.EnrollmentRepository
+type EnrollmentService interface {
+	Enroll(studentID, courseID int) error
+	Unenroll(studentID, courseID int) error
 }
 
-func NewEnrollmentHandler(repo *repository.EnrollmentRepository) *EnrollmentHandler {
-	return &EnrollmentHandler{repo: repo}
+type EnrollmentHandler struct {
+	svc EnrollmentService
+}
+
+func NewEnrollmentHandler(svc EnrollmentService) *EnrollmentHandler {
+	return &EnrollmentHandler{svc: svc}
 }
 
 func (h *EnrollmentHandler) Enroll(w http.ResponseWriter, r *http.Request) {
@@ -23,12 +26,12 @@ func (h *EnrollmentHandler) Enroll(w http.ResponseWriter, r *http.Request) {
 	courseID, err2 := strconv.Atoi(courseIDStr)
 
 	if err1 != nil || err2 != nil {
-		writeError(w, http.StatusBadRequest, "invalid IDs")
+		writeJSONError(w, "invalid IDs", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.EnrollStudent(studentID, courseID); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to enroll student")
+	if err := h.svc.Enroll(studentID, courseID); err != nil {
+		writeJSONError(w, "failed to enroll student", http.StatusInternalServerError)
 		return
 	}
 
@@ -43,12 +46,12 @@ func (h *EnrollmentHandler) Unenroll(w http.ResponseWriter, r *http.Request) {
 	courseID, err2 := strconv.Atoi(courseIDStr)
 
 	if err1 != nil || err2 != nil {
-		writeError(w, http.StatusBadRequest, "invalid IDs")
+		writeJSONError(w, "invalid IDs", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.UnenrollStudent(studentID, courseID); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to unenroll student")
+	if err := h.svc.Unenroll(studentID, courseID); err != nil {
+		writeJSONError(w, "failed to unenroll student", http.StatusInternalServerError)
 		return
 	}
 

@@ -13,9 +13,14 @@ func NewStudentRepository(db *sql.DB) *StudentRepository {
 	return &StudentRepository{db: db}
 }
 
-func (r *StudentRepository) CreateStudent(s *models.Student) error {
+func (r *StudentRepository) CreateStudent(s *models.Student) (int, error) {
+	var id int
 	query := `INSERT INTO students (first_name, last_name, email) VALUES ($1, $2, $3) RETURNING id`
-	return r.db.QueryRow(query, s.FirstName, s.LastName, s.Email).Scan(&s.ID)
+	err := r.db.QueryRow(query, s.FirstName, s.LastName, s.Email).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (r *StudentRepository) GetStudentByID(id int) (*models.Student, error) {

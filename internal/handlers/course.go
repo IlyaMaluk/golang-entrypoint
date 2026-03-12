@@ -25,14 +25,6 @@ func NewCourseHandler(svc CourseService) *CourseHandler {
 	return &CourseHandler{svc: svc}
 }
 
-func writeJSONError(w http.ResponseWriter, message string, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(map[string]string{"error": message}); err != nil {
-		slog.Error("failed to write json error response", "error", err)
-	}
-}
-
 func (h *CourseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var c domain.Course
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {

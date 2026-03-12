@@ -13,9 +13,14 @@ func NewTeacherRepository(db *sql.DB) *TeacherRepository {
 	return &TeacherRepository{db: db}
 }
 
-func (r *TeacherRepository) CreateTeacher(t *models.Teacher) error {
+func (r *TeacherRepository) CreateTeacher(t *models.Teacher) (int, error) {
+	var id int
 	query := `INSERT INTO teachers (first_name, last_name, department) VALUES ($1, $2, $3) RETURNING id`
-	return r.db.QueryRow(query, t.FirstName, t.LastName, t.Department).Scan(&t.ID)
+	err := r.db.QueryRow(query, t.FirstName, t.LastName, t.Department).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (r *TeacherRepository) GetTeacherByID(id int) (*models.Teacher, error) {

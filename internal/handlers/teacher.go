@@ -2,107 +2,135 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 
-	"golang-entrypoint/internal/models"
-	"golang-entrypoint/internal/repository"
+	"golang-entrypoint/internal/domain"
 )
 
-type TeacherHandler struct {
-	repo *repository.TeacherRepository
+type TeacherService interface {
+	CreateTeacher(req *domain.Teacher) (*domain.Teacher, error)
+	GetTeacherByID(id int) (*domain.Teacher, error)
+	GetAllTeachers() ([]domain.Teacher, error)
+	UpdateTeacher(req *domain.Teacher) (*domain.Teacher, error)
+	DeleteTeacher(id int) (int, error)
 }
 
-func NewTeacherHandler(repo *repository.TeacherRepository) *TeacherHandler {
-	return &TeacherHandler{repo: repo}
+type TeacherHandler struct {
+	svc TeacherService
+}
+
+func NewTeacherHandler(svc TeacherService) *TeacherHandler {
+	return &TeacherHandler{svc: svc}
 }
 
 func (h *TeacherHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var t models.Teacher
+	var t domain.Teacher
 	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		writeJSONError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
 	if t.FirstName == "" || t.LastName == "" || t.Department == "" {
-		writeError(w, http.StatusBadRequest, "missing required fields")
+		writeJSONError(w, "missing required fields", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.CreateTeacher(&t); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create teacher")
+	createdTeacher, err := h.svc.CreateTeacher(&t)
+	if err != nil {
+		writeJSONError(w, "failed to create teacher", http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, t)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(createdTeacher); err != nil {
+		slog.Error("error encoding response", "error", err)
+	}
 }
 
 func (h *TeacherHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid teacher ID")
+		writeJSONError(w, "invalid teacher ID", http.StatusBadRequest)
 		return
 	}
 
-	t, err := h.repo.GetTeacherByID(id)
+	t, err := h.svc.GetTeacherByID(id)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "teacher not found")
+		writeJSONError(w, "teacher not found", http.StatusNotFound)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, t)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(t); err != nil {
+		slog.Error("error encoding response", "error", err)
+	}
 }
 
-func (h *TeacherHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	teachers, err := h.repo.GetAllTeachers()
+func (h *TeacherHandler) GetAll(w http.ResponseWriter, _ *http.Request) {
+	teachers, err := h.svc.GetAllTeachers()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to fetch teachers")
+		writeJSONError(w, "failed to fetch teachers", http.StatusInternalServerError)
 		return
 	}
 
-	if teachers == nil {
-		teachers = []models.Teacher{}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(teachers); err != nil {
+		slog.Error("error encoding response", "error", err)
 	}
-
-	writeJSON(w, http.StatusOK, teachers)
 }
 
 func (h *TeacherHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid teacher ID")
+		writeJSONError(w, "invalid teacher ID", http.StatusBadRequest)
 		return
 	}
 
-	var t models.Teacher
+	var t domain.Teacher
 	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		writeJSONError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 	t.ID = id
 
-	if err := h.repo.UpdateTeacher(&t); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to update teacher")
+	updatedTeacher, err := h.svc.UpdateTeacher(&t)
+	if err != nil {
+		writeJSONError(w, "failed to update teacher", http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, t)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(updatedTeacher); err != nil {
+		slog.Error("error encoding response", "error", err)
+	}
 }
 
 func (h *TeacherHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid teacher ID")
+		writeJSONError(w, "invalid teacher ID", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.DeleteTeacher(id); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to delete teacher")
+	deletedID, err := h.svc.DeleteTeacher(id)
+	if err != nil {
+		writeJSONError(w, "failed to delete teacher", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	response := map[string]int{"deleted_id": deletedID}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		slog.Error("error encoding response", "error", err)
+	}
 }
