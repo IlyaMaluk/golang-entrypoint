@@ -47,9 +47,12 @@ func (s *CourseServiceImpl) CreateCourse(req *domain.Course) (*domain.Course, er
 		return nil, err
 	}
 
-	res := *req
-	res.ID = id
-	return &res, nil
+	return &domain.Course{
+		ID:          id,
+		Title:       req.Title,
+		Description: req.Description,
+		TeacherID:   req.TeacherID,
+	}, nil
 }
 
 func (s *CourseServiceImpl) GetCourseByID(id int) (*domain.Course, error) {
@@ -82,8 +85,12 @@ func (s *CourseServiceImpl) UpdateCourse(req *domain.Course) (*domain.Course, er
 		return nil, err
 	}
 
-	res := *req
-	return &res, nil
+	return &domain.Course{
+		ID:          req.ID,
+		Title:       req.Title,
+		Description: req.Description,
+		TeacherID:   req.TeacherID,
+	}, nil
 }
 
 func (s *CourseServiceImpl) DeleteCourse(id int) (int, error) {

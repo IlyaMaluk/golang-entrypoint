@@ -45,9 +45,13 @@ func (s *TeacherServiceImpl) CreateTeacher(req *domain.Teacher) (*domain.Teacher
 	if err != nil {
 		return nil, err
 	}
-	res := *req
-	res.ID = id
-	return &res, nil
+
+	return &domain.Teacher{
+		ID:         id,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Department: req.Department,
+	}, nil
 }
 
 func (s *TeacherServiceImpl) GetTeacherByID(id int) (*domain.Teacher, error) {
@@ -78,8 +82,13 @@ func (s *TeacherServiceImpl) UpdateTeacher(req *domain.Teacher) (*domain.Teacher
 	if err := s.repo.UpdateTeacher(mapTeacherToDB(req)); err != nil {
 		return nil, err
 	}
-	res := *req
-	return &res, nil
+
+	return &domain.Teacher{
+		ID:         req.ID,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Department: req.Department,
+	}, nil
 }
 
 func (s *TeacherServiceImpl) DeleteTeacher(id int) (int, error) {

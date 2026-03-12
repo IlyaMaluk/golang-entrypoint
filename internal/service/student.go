@@ -45,9 +45,13 @@ func (s *StudentServiceImpl) CreateStudent(req *domain.Student) (*domain.Student
 	if err != nil {
 		return nil, err
 	}
-	res := *req
-	res.ID = id
-	return &res, nil
+
+	return &domain.Student{
+		ID:        id,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+	}, nil
 }
 
 func (s *StudentServiceImpl) GetStudentByID(id int) (*domain.Student, error) {
@@ -78,8 +82,13 @@ func (s *StudentServiceImpl) UpdateStudent(req *domain.Student) (*domain.Student
 	if err := s.repo.UpdateStudent(mapStudentToDB(req)); err != nil {
 		return nil, err
 	}
-	res := *req
-	return &res, nil
+
+	return &domain.Student{
+		ID:        req.ID,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Email:     req.Email,
+	}, nil
 }
 
 func (s *StudentServiceImpl) DeleteStudent(id int) (int, error) {
