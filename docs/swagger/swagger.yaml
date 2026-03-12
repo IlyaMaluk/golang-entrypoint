@@ -1,0 +1,422 @@
+swagger: "2.0"
+info:
+  description: "REST API for managing students, teachers, and courses."
+  title: "School API"
+  version: "1.0"
+host: "localhost:8080"
+basePath: "/"
+schemes:
+  - "http"
+securityDefinitions:
+  BearerAuth:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+    description: "Вставте токен у форматі: Bearer <ваш_токен>"
+
+paths:
+  /login:
+    post:
+      summary: "Логін (отримання токена)"
+      description: "Повертає JWT токен для доступу до захищених ендпоінтів"
+      tags:
+        - "auth"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "input"
+          description: "Облікові дані (admin/password)"
+          required: true
+          schema:
+            $ref: "#/definitions/LoginRequest"
+      responses:
+        "200":
+          description: "Успішно"
+        "401":
+          description: "Невірно вказані дані"
+
+  /students:
+    get:
+      summary: "Отримати всіх студентів"
+      tags:
+        - "students"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Список студентів"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Student"
+    post:
+      summary: "Створити студента"
+      tags:
+        - "students"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: "body"
+          name: "student"
+          required: true
+          schema:
+            $ref: "#/definitions/Student"
+      responses:
+        "201":
+          description: "Студент створений"
+          schema:
+            $ref: "#/definitions/Student"
+        "401":
+          description: "Необхідна авторизація"
+
+  /students/{id}:
+    get:
+      summary: "Отримати студента за ID"
+      tags:
+        - "students"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "200":
+          description: "Студент знайдений"
+          schema:
+            $ref: "#/definitions/Student"
+        "404":
+          description: "Не знайдено"
+    put:
+      summary: "Оновити студента"
+      tags:
+        - "students"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "student"
+          required: true
+          schema:
+            $ref: "#/definitions/Student"
+      responses:
+        "200":
+          description: "Оновлено успішно"
+          schema:
+            $ref: "#/definitions/Student"
+        "401":
+          description: "Необхідна авторизація"
+    delete:
+      summary: "Видалити студента"
+      tags:
+        - "students"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "204":
+          description: "Успішно видалено"
+        "401":
+          description: "Необхідна авторизація"
+
+  /teachers:
+    get:
+      summary: "Отримати всіх викладачів"
+      tags:
+        - "teachers"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Список викладачів"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Teacher"
+    post:
+      summary: "Створити викладача"
+      tags:
+        - "teachers"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: "body"
+          name: "teacher"
+          required: true
+          schema:
+            $ref: "#/definitions/Teacher"
+      responses:
+        "201":
+          description: "Створено"
+          schema:
+            $ref: "#/definitions/Teacher"
+
+  /teachers/{id}:
+    get:
+      summary: "Отримати викладача за ID"
+      tags:
+        - "teachers"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "200":
+          description: "Викладач знайдений"
+          schema:
+            $ref: "#/definitions/Teacher"
+    put:
+      summary: "Оновити викладача"
+      tags:
+        - "teachers"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "teacher"
+          required: true
+          schema:
+            $ref: "#/definitions/Teacher"
+      responses:
+        "200":
+          description: "Оновлено"
+    delete:
+      summary: "Видалити викладача"
+      tags:
+        - "teachers"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "204":
+          description: "Видалено"
+
+  /courses:
+    get:
+      summary: "Отримати всі курси"
+      tags:
+        - "courses"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "Список курсів"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Course"
+    post:
+      summary: "Створити курс"
+      tags:
+        - "courses"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: "body"
+          name: "course"
+          required: true
+          schema:
+            $ref: "#/definitions/Course"
+      responses:
+        "201":
+          description: "Створено"
+          schema:
+            $ref: "#/definitions/Course"
+
+  /courses/{id}:
+    get:
+      summary: "Отримати курс за ID"
+      tags:
+        - "courses"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "200":
+          description: "Курс знайдений"
+          schema:
+            $ref: "#/definitions/Course"
+    put:
+      summary: "Оновити курс"
+      tags:
+        - "courses"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+        - in: "body"
+          name: "course"
+          required: true
+          schema:
+            $ref: "#/definitions/Course"
+      responses:
+        "200":
+          description: "Оновлено"
+    delete:
+      summary: "Видалити курс"
+      tags:
+        - "courses"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "204":
+          description: "Видалено"
+
+  /students/{id}/courses/{course_id}:
+    post:
+      summary: "Зареєструвати студента на курс"
+      tags:
+        - "enrollments"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+        - name: "course_id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "201":
+          description: "Зареєстровано"
+    delete:
+      summary: "Відрахувати студента з курсу"
+      tags:
+        - "enrollments"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          type: "integer"
+        - name: "course_id"
+          in: "path"
+          required: true
+          type: "integer"
+      responses:
+        "204":
+          description: "Відраховано"
+
+definitions:
+  LoginRequest:
+    type: "object"
+    required:
+      - "username"
+      - "password"
+    properties:
+      username:
+        type: "string"
+        example: "admin"
+      password:
+        type: "string"
+        example: "password"
+
+  Student:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        readOnly: true
+      first_name:
+        type: "string"
+        example: "Taras"
+      last_name:
+        type: "string"
+        example: "Shevchenko"
+      email:
+        type: "string"
+        example: "taras@example.com"
+
+  Teacher:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        readOnly: true
+      first_name:
+        type: "string"
+        example: "Ivan"
+      last_name:
+        type: "string"
+        example: "Franko"
+      department:
+        type: "string"
+        example: "Computer Science"
+
+  Course:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        readOnly: true
+      title:
+        type: "string"
+        example: "Go Programming"
+      description:
+        type: "string"
+        example: "Learn how to build APIs in Go"
+      teacher_id:
+        type: "integer"
+        example: 1
