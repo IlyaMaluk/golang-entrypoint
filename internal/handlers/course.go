@@ -59,7 +59,7 @@ func (h *CourseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *CourseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+func (h *CourseHandler) GetAll(w http.ResponseWriter, _ *http.Request) {
 	courses, err := h.svc.GetAllCourses()
 	if err != nil {
 		http.Error(w, `{"error": "failed to fetch courses"}`, http.StatusInternalServerError)
