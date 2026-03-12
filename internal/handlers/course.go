@@ -5,102 +5,113 @@ import (
 	"net/http"
 	"strconv"
 
-	"golang-entrypoint/internal/models"
-	"golang-entrypoint/internal/repository"
+	"golang-entrypoint/internal/domain"
+	"golang-entrypoint/internal/service"
 )
 
 type CourseHandler struct {
-	repo *repository.CourseRepository
+	svc *service.CourseService
 }
 
-func NewCourseHandler(repo *repository.CourseRepository) *CourseHandler {
-	return &CourseHandler{repo: repo}
+func NewCourseHandler(svc *service.CourseService) *CourseHandler {
+	return &CourseHandler{svc: svc}
 }
 
 func (h *CourseHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var c models.Course
+	var c domain.Course
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		http.Error(w, `{"error": "invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 
-	if c.Title == "" || c.TeacherID <= 0 {
-		writeError(w, http.StatusBadRequest, "missing or invalid required fields")
+	if err := h.svc.CreateCourse(&c); err != nil {
+		http.Error(w, `{"error": "failed to create course"}`, http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.repo.CreateCourse(&c); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to create course")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	err := json.NewEncoder(w).Encode(c)
+	if err != nil {
 		return
 	}
-
-	writeJSON(w, http.StatusCreated, c)
 }
 
 func (h *CourseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid course ID")
+		http.Error(w, `{"error": "invalid course ID"}`, http.StatusBadRequest)
 		return
 	}
 
-	c, err := h.repo.GetCourseByID(id)
+	c, err := h.svc.GetCourseByID(id)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "course not found")
+		http.Error(w, `{"error": "course not found"}`, http.StatusNotFound)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, c)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(c)
+	if err != nil {
+		return
+	}
 }
 
 func (h *CourseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	courses, err := h.repo.GetAllCourses()
+	courses, err := h.svc.GetAllCourses()
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to fetch courses")
+		http.Error(w, `{"error": "failed to fetch courses"}`, http.StatusInternalServerError)
 		return
 	}
 
-	if courses == nil {
-		courses = []models.Course{}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(courses)
+	if err != nil {
+		return
 	}
-
-	writeJSON(w, http.StatusOK, courses)
 }
 
 func (h *CourseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid course ID")
+		http.Error(w, `{"error": "invalid course ID"}`, http.StatusBadRequest)
 		return
 	}
 
-	var c models.Course
+	var c domain.Course
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		http.Error(w, `{"error": "invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 	c.ID = id
 
-	if err := h.repo.UpdateCourse(&c); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to update course")
+	if err := h.svc.UpdateCourse(&c); err != nil {
+		http.Error(w, `{"error": "failed to update course"}`, http.StatusInternalServerError)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, c)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(c)
+	if err != nil {
+		return
+	}
 }
 
 func (h *CourseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid course ID")
+		http.Error(w, `{"error": "invalid course ID"}`, http.StatusBadRequest)
 		return
 	}
 
-	if err := h.repo.DeleteCourse(id); err != nil {
-		writeError(w, http.StatusInternalServerError, "failed to delete course")
+	if err := h.svc.DeleteCourse(id); err != nil {
+		http.Error(w, `{"error": "failed to delete course"}`, http.StatusInternalServerError)
 		return
 	}
 
