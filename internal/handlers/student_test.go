@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"golang-entrypoint/internal/mock"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,7 +30,7 @@ func (m *mockStudentService) UpdateStudent(_ context.Context, _ *domain.Student)
 func (m *mockStudentService) DeleteStudent(_ context.Context, _ int) (int, error) { return 0, nil }
 
 func TestStudentHandler_Create_InvalidJSON(t *testing.T) {
-	h := NewStudentHandler(&mockStudentService{})
+	h := NewStudentHandler(&mockStudentService{}, &mock.ValidatorService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBuffer([]byte(`{bad json`)))
 	rec := httptest.NewRecorder()
@@ -41,7 +42,7 @@ func TestStudentHandler_Create_InvalidJSON(t *testing.T) {
 }
 
 func TestStudentHandler_Create_MissingFields(t *testing.T) {
-	h := NewStudentHandler(&mockStudentService{})
+	h := NewStudentHandler(&mockStudentService{}, &mock.ValidatorService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBuffer([]byte(`{"first_name": "John"}`)))
 	rec := httptest.NewRecorder()
