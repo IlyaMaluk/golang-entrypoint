@@ -10,8 +10,8 @@ help:
 	@echo "  make test          - Запустити всі тести"
 	@echo "  make migrate-up    - Накотити міграції бази даних"
 	@echo "  make migrate-down  - Відкотити всі міграції бази даних"
-	@echo "  make docker-up     - Підняти проєкт у Docker Compose"
-	@echo "  make docker-down   - Зупинити Docker Compose та видалити томи"
+	@echo "  make up     - Підняти проєкт у Docker Compose"
+	@echo "  make down   - Зупинити Docker Compose та видалити томи"
 	@echo "  make clean         - Видалити зібрані файли"
 
 build:
@@ -29,10 +29,10 @@ migrate-up:
 migrate-down:
 	migrate -path $(MIGRATIONS_DIR) -database $(DB_URL) down -all
 
-docker-up:
-	docker compose -f build/docker-compose.yml up --build
+up:
+	docker compose -f build/docker-compose.yml up --build -d
 
-docker-down:
+down:
 	docker compose -f build/docker-compose.yml down -v
 
 clean:
