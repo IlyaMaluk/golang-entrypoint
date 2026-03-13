@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,8 +11,8 @@ import (
 
 type mockEnrollmentService struct{}
 
-func (m *mockEnrollmentService) Enroll(_, _ int) error   { return nil }
-func (m *mockEnrollmentService) Unenroll(_, _ int) error { return nil }
+func (m *mockEnrollmentService) Enroll(_ context.Context, _, _ int) error   { return nil }
+func (m *mockEnrollmentService) Unenroll(_ context.Context, _, _ int) error { return nil }
 
 func TestEnrollmentHandler_Enroll_InvalidIDs(t *testing.T) {
 	h := NewEnrollmentHandler(&mockEnrollmentService{})

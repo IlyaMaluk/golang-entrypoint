@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,15 +14,19 @@ import (
 
 type mockStudentService struct{}
 
-func (m *mockStudentService) CreateStudent(_ *domain.Student) (*domain.Student, error) {
+func (m *mockStudentService) CreateStudent(_ context.Context, _ *domain.Student) (*domain.Student, error) {
 	return nil, nil
 }
-func (m *mockStudentService) GetStudentByID(_ int) (*domain.Student, error) { return nil, nil }
-func (m *mockStudentService) GetAllStudents() ([]domain.Student, error)     { return nil, nil }
-func (m *mockStudentService) UpdateStudent(_ *domain.Student) (*domain.Student, error) {
+func (m *mockStudentService) GetStudentByID(_ context.Context, _ int) (*domain.Student, error) {
 	return nil, nil
 }
-func (m *mockStudentService) DeleteStudent(_ int) (int, error) { return 0, nil }
+func (m *mockStudentService) GetAllStudents(_ context.Context) ([]domain.Student, error) {
+	return nil, nil
+}
+func (m *mockStudentService) UpdateStudent(_ context.Context, _ *domain.Student) (*domain.Student, error) {
+	return nil, nil
+}
+func (m *mockStudentService) DeleteStudent(_ context.Context, _ int) (int, error) { return 0, nil }
 
 func TestStudentHandler_Create_InvalidJSON(t *testing.T) {
 	h := NewStudentHandler(&mockStudentService{})

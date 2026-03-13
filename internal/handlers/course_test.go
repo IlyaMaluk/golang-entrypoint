@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,11 +14,19 @@ import (
 
 type mockCourseService struct{}
 
-func (m *mockCourseService) CreateCourse(_ *domain.Course) (*domain.Course, error) { return nil, nil }
-func (m *mockCourseService) GetCourseByID(_ int) (*domain.Course, error)           { return nil, nil }
-func (m *mockCourseService) GetAllCourses() ([]domain.Course, error)               { return nil, nil }
-func (m *mockCourseService) UpdateCourse(_ *domain.Course) (*domain.Course, error) { return nil, nil }
-func (m *mockCourseService) DeleteCourse(_ int) (int, error)                       { return 0, nil }
+func (m *mockCourseService) CreateCourse(_ context.Context, _ *domain.Course) (*domain.Course, error) {
+	return nil, nil
+}
+func (m *mockCourseService) GetCourseByID(_ context.Context, _ int) (*domain.Course, error) {
+	return nil, nil
+}
+func (m *mockCourseService) GetAllCourses(_ context.Context) ([]domain.Course, error) {
+	return nil, nil
+}
+func (m *mockCourseService) UpdateCourse(_ context.Context, _ *domain.Course) (*domain.Course, error) {
+	return nil, nil
+}
+func (m *mockCourseService) DeleteCourse(_ context.Context, _ int) (int, error) { return 0, nil }
 
 func TestCourseHandler_Create_InvalidJSON(t *testing.T) {
 	h := NewCourseHandler(&mockCourseService{})

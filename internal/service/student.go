@@ -1,16 +1,17 @@
 package service
 
 import (
+	"context"
 	"golang-entrypoint/internal/domain"
 	"golang-entrypoint/internal/models"
 )
 
 type StudentRepository interface {
-	CreateStudent(s *models.Student) (int, error)
-	GetStudentByID(id int) (*models.Student, error)
-	GetAllStudents() ([]models.Student, error)
-	UpdateStudent(s *models.Student) (*models.Student, error)
-	DeleteStudent(id int) error
+	CreateStudent(ctx context.Context, s *models.Student) (*models.Student, error)
+	GetStudentByID(ctx context.Context, id int) (*models.Student, error)
+	GetAllStudents(ctx context.Context) ([]models.Student, error)
+	UpdateStudent(ctx context.Context, s *models.Student) (*models.Student, error)
+	DeleteStudent(ctx context.Context, id int) error
 }
 
 type StudentServiceImpl struct {
@@ -39,31 +40,25 @@ func mapStudentToDomain(m *models.Student) *domain.Student {
 	}
 }
 
-func (s *StudentServiceImpl) CreateStudent(req *domain.Student) (*domain.Student, error) {
+func (s *StudentServiceImpl) CreateStudent(ctx context.Context, req *domain.Student) (*domain.Student, error) {
 	dbModel := mapStudentToDB(req)
-	id, err := s.repo.CreateStudent(dbModel)
+	createdDBModel, err := s.repo.CreateStudent(ctx, dbModel)
 	if err != nil {
 		return nil, err
 	}
-
-	return &domain.Student{
-		ID:        id,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Email:     req.Email,
-	}, nil
+	return mapStudentToDomain(createdDBModel), nil
 }
 
-func (s *StudentServiceImpl) GetStudentByID(id int) (*domain.Student, error) {
-	dbModel, err := s.repo.GetStudentByID(id)
+func (s *StudentServiceImpl) GetStudentByID(ctx context.Context, id int) (*domain.Student, error) {
+	dbModel, err := s.repo.GetStudentByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return mapStudentToDomain(dbModel), nil
 }
 
-func (s *StudentServiceImpl) GetAllStudents() ([]domain.Student, error) {
-	dbModels, err := s.repo.GetAllStudents()
+func (s *StudentServiceImpl) GetAllStudents(ctx context.Context) ([]domain.Student, error) {
+	dbModels, err := s.repo.GetAllStudents(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,16 +73,16 @@ func (s *StudentServiceImpl) GetAllStudents() ([]domain.Student, error) {
 	return domainStudents, nil
 }
 
-func (s *StudentServiceImpl) UpdateStudent(req *domain.Student) (*domain.Student, error) {
-	updatedDBModel, err := s.repo.UpdateStudent(mapStudentToDB(req))
+func (s *StudentServiceImpl) UpdateStudent(ctx context.Context, req *domain.Student) (*domain.Student, error) {
+	updatedDBModel, err := s.repo.UpdateStudent(ctx, mapStudentToDB(req))
 	if err != nil {
 		return nil, err
 	}
 	return mapStudentToDomain(updatedDBModel), nil
 }
 
-func (s *StudentServiceImpl) DeleteStudent(id int) (int, error) {
-	if err := s.repo.DeleteStudent(id); err != nil {
+func (s *StudentServiceImpl) DeleteStudent(ctx context.Context, id int) (int, error) {
+	if err := s.repo.DeleteStudent(ctx, id); err != nil {
 		return 0, err
 	}
 	return id, nil

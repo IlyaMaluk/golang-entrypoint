@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,11 +11,11 @@ import (
 )
 
 type TeacherService interface {
-	CreateTeacher(req *domain.Teacher) (*domain.Teacher, error)
-	GetTeacherByID(id int) (*domain.Teacher, error)
-	GetAllTeachers() ([]domain.Teacher, error)
-	UpdateTeacher(req *domain.Teacher) (*domain.Teacher, error)
-	DeleteTeacher(id int) (int, error)
+	CreateTeacher(ctx context.Context, req *domain.Teacher) (*domain.Teacher, error)
+	GetTeacherByID(ctx context.Context, id int) (*domain.Teacher, error)
+	GetAllTeachers(ctx context.Context) ([]domain.Teacher, error)
+	UpdateTeacher(ctx context.Context, req *domain.Teacher) (*domain.Teacher, error)
+	DeleteTeacher(ctx context.Context, id int) (int, error)
 }
 
 type TeacherHandler struct {
@@ -37,7 +38,8 @@ func (h *TeacherHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdTeacher, err := h.svc.CreateTeacher(&t)
+	ctx := r.Context()
+	createdTeacher, err := h.svc.CreateTeacher(ctx, &t)
 	if err != nil {
 		writeJSONError(w, "failed to create teacher", http.StatusInternalServerError)
 		return
@@ -58,7 +60,8 @@ func (h *TeacherHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := h.svc.GetTeacherByID(id)
+	ctx := r.Context()
+	t, err := h.svc.GetTeacherByID(ctx, id)
 	if err != nil {
 		writeJSONError(w, "teacher not found", http.StatusNotFound)
 		return
@@ -71,8 +74,9 @@ func (h *TeacherHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *TeacherHandler) GetAll(w http.ResponseWriter, _ *http.Request) {
-	teachers, err := h.svc.GetAllTeachers()
+func (h *TeacherHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	teachers, err := h.svc.GetAllTeachers(ctx)
 	if err != nil {
 		writeJSONError(w, "failed to fetch teachers", http.StatusInternalServerError)
 		return
@@ -100,7 +104,8 @@ func (h *TeacherHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	t.ID = id
 
-	updatedTeacher, err := h.svc.UpdateTeacher(&t)
+	ctx := r.Context()
+	updatedTeacher, err := h.svc.UpdateTeacher(ctx, &t)
 	if err != nil {
 		writeJSONError(w, "failed to update teacher", http.StatusInternalServerError)
 		return
@@ -121,7 +126,8 @@ func (h *TeacherHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deletedID, err := h.svc.DeleteTeacher(id)
+	ctx := r.Context()
+	deletedID, err := h.svc.DeleteTeacher(ctx, id)
 	if err != nil {
 		writeJSONError(w, "failed to delete teacher", http.StatusInternalServerError)
 		return

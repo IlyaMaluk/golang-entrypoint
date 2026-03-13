@@ -1,16 +1,17 @@
 package service
 
 import (
+	"context"
 	"golang-entrypoint/internal/domain"
 	"golang-entrypoint/internal/models"
 )
 
 type TeacherRepository interface {
-	CreateTeacher(t *models.Teacher) (int, error)
-	GetTeacherByID(id int) (*models.Teacher, error)
-	GetAllTeachers() ([]models.Teacher, error)
-	UpdateTeacher(t *models.Teacher) (*models.Teacher, error)
-	DeleteTeacher(id int) error
+	CreateTeacher(ctx context.Context, t *models.Teacher) (*models.Teacher, error)
+	GetTeacherByID(ctx context.Context, id int) (*models.Teacher, error)
+	GetAllTeachers(ctx context.Context) ([]models.Teacher, error)
+	UpdateTeacher(ctx context.Context, t *models.Teacher) (*models.Teacher, error)
+	DeleteTeacher(ctx context.Context, id int) error
 }
 
 type TeacherServiceImpl struct {
@@ -39,31 +40,25 @@ func mapTeacherToDomain(m *models.Teacher) *domain.Teacher {
 	}
 }
 
-func (s *TeacherServiceImpl) CreateTeacher(req *domain.Teacher) (*domain.Teacher, error) {
+func (s *TeacherServiceImpl) CreateTeacher(ctx context.Context, req *domain.Teacher) (*domain.Teacher, error) {
 	dbModel := mapTeacherToDB(req)
-	id, err := s.repo.CreateTeacher(dbModel)
+	createdDBModel, err := s.repo.CreateTeacher(ctx, dbModel)
 	if err != nil {
 		return nil, err
 	}
-
-	return &domain.Teacher{
-		ID:         id,
-		FirstName:  req.FirstName,
-		LastName:   req.LastName,
-		Department: req.Department,
-	}, nil
+	return mapTeacherToDomain(createdDBModel), nil
 }
 
-func (s *TeacherServiceImpl) GetTeacherByID(id int) (*domain.Teacher, error) {
-	dbModel, err := s.repo.GetTeacherByID(id)
+func (s *TeacherServiceImpl) GetTeacherByID(ctx context.Context, id int) (*domain.Teacher, error) {
+	dbModel, err := s.repo.GetTeacherByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	return mapTeacherToDomain(dbModel), nil
 }
 
-func (s *TeacherServiceImpl) GetAllTeachers() ([]domain.Teacher, error) {
-	dbModels, err := s.repo.GetAllTeachers()
+func (s *TeacherServiceImpl) GetAllTeachers(ctx context.Context) ([]domain.Teacher, error) {
+	dbModels, err := s.repo.GetAllTeachers(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,16 +73,16 @@ func (s *TeacherServiceImpl) GetAllTeachers() ([]domain.Teacher, error) {
 	return domainTeachers, nil
 }
 
-func (s *TeacherServiceImpl) UpdateTeacher(req *domain.Teacher) (*domain.Teacher, error) {
-	updatedDBModel, err := s.repo.UpdateTeacher(mapTeacherToDB(req))
+func (s *TeacherServiceImpl) UpdateTeacher(ctx context.Context, req *domain.Teacher) (*domain.Teacher, error) {
+	updatedDBModel, err := s.repo.UpdateTeacher(ctx, mapTeacherToDB(req))
 	if err != nil {
 		return nil, err
 	}
 	return mapTeacherToDomain(updatedDBModel), nil
 }
 
-func (s *TeacherServiceImpl) DeleteTeacher(id int) (int, error) {
-	if err := s.repo.DeleteTeacher(id); err != nil {
+func (s *TeacherServiceImpl) DeleteTeacher(ctx context.Context, id int) (int, error) {
+	if err := s.repo.DeleteTeacher(ctx, id); err != nil {
 		return 0, err
 	}
 	return id, nil

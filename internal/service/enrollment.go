@@ -1,8 +1,10 @@
 package service
 
+import "context"
+
 type EnrollmentRepository interface {
-	EnrollStudent(studentID, courseID int) error
-	UnenrollStudent(studentID, courseID int) error
+	EnrollStudent(ctx context.Context, studentID, courseID int) error
+	UnenrollStudent(ctx context.Context, studentID, courseID int) error
 }
 
 type EnrollmentServiceImpl struct {
@@ -13,10 +15,10 @@ func NewEnrollmentService(repo EnrollmentRepository) *EnrollmentServiceImpl {
 	return &EnrollmentServiceImpl{repo: repo}
 }
 
-func (s *EnrollmentServiceImpl) Enroll(studentID, courseID int) error {
-	return s.repo.EnrollStudent(studentID, courseID)
+func (s *EnrollmentServiceImpl) Enroll(ctx context.Context, studentID, courseID int) error {
+	return s.repo.EnrollStudent(ctx, studentID, courseID)
 }
 
-func (s *EnrollmentServiceImpl) Unenroll(studentID, courseID int) error {
-	return s.repo.UnenrollStudent(studentID, courseID)
+func (s *EnrollmentServiceImpl) Unenroll(ctx context.Context, studentID, courseID int) error {
+	return s.repo.UnenrollStudent(ctx, studentID, courseID)
 }

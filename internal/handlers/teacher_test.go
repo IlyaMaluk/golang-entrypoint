@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,15 +14,19 @@ import (
 
 type mockTeacherService struct{}
 
-func (m *mockTeacherService) CreateTeacher(_ *domain.Teacher) (*domain.Teacher, error) {
+func (m *mockTeacherService) CreateTeacher(_ context.Context, _ *domain.Teacher) (*domain.Teacher, error) {
 	return nil, nil
 }
-func (m *mockTeacherService) GetTeacherByID(_ int) (*domain.Teacher, error) { return nil, nil }
-func (m *mockTeacherService) GetAllTeachers() ([]domain.Teacher, error)     { return nil, nil }
-func (m *mockTeacherService) UpdateTeacher(_ *domain.Teacher) (*domain.Teacher, error) {
+func (m *mockTeacherService) GetTeacherByID(_ context.Context, _ int) (*domain.Teacher, error) {
 	return nil, nil
 }
-func (m *mockTeacherService) DeleteTeacher(_ int) (int, error) { return 0, nil }
+func (m *mockTeacherService) GetAllTeachers(_ context.Context) ([]domain.Teacher, error) {
+	return nil, nil
+}
+func (m *mockTeacherService) UpdateTeacher(_ context.Context, _ *domain.Teacher) (*domain.Teacher, error) {
+	return nil, nil
+}
+func (m *mockTeacherService) DeleteTeacher(_ context.Context, _ int) (int, error) { return 0, nil }
 
 func TestTeacherHandler_Create_MissingFields(t *testing.T) {
 	h := NewTeacherHandler(&mockTeacherService{})
