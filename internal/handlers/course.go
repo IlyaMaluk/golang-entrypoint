@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,11 +11,11 @@ import (
 )
 
 type CourseService interface {
-	CreateCourse(req *domain.Course) (*domain.Course, error)
-	GetCourseByID(id int) (*domain.Course, error)
-	GetAllCourses() ([]domain.Course, error)
-	UpdateCourse(req *domain.Course) (*domain.Course, error)
-	DeleteCourse(id int) (int, error)
+	CreateCourse(ctx context.Context, req *domain.Course) (*domain.Course, error)
+	GetCourseByID(ctx context.Context, id int) (*domain.Course, error)
+	GetAllCourses(ctx context.Context) ([]domain.Course, error)
+	UpdateCourse(ctx context.Context, req *domain.Course) (*domain.Course, error)
+	DeleteCourse(ctx context.Context, id int) (int, error)
 }
 
 type CourseHandler struct {
@@ -25,14 +26,6 @@ func NewCourseHandler(svc CourseService) *CourseHandler {
 	return &CourseHandler{svc: svc}
 }
 
-func writeJSONError(w http.ResponseWriter, message string, statusCode int) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(map[string]string{"error": message}); err != nil {
-		slog.Error("failed to write json error response", "error", err)
-	}
-}
-
 func (h *CourseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var c domain.Course
 	if err := json.NewDecoder(r.Body).Decode(&c); err != nil {
@@ -40,7 +33,8 @@ func (h *CourseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdCourse, err := h.svc.CreateCourse(&c)
+	ctx := r.Context()
+	createdCourse, err := h.svc.CreateCourse(ctx, &c)
 	if err != nil {
 		writeJSONError(w, "failed to create course", http.StatusInternalServerError)
 		return
@@ -61,7 +55,8 @@ func (h *CourseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c, err := h.svc.GetCourseByID(id)
+	ctx := r.Context()
+	c, err := h.svc.GetCourseByID(ctx, id)
 	if err != nil {
 		writeJSONError(w, "course not found", http.StatusNotFound)
 		return
@@ -74,8 +69,9 @@ func (h *CourseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *CourseHandler) GetAll(w http.ResponseWriter, _ *http.Request) {
-	courses, err := h.svc.GetAllCourses()
+func (h *CourseHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	courses, err := h.svc.GetAllCourses(ctx)
 	if err != nil {
 		writeJSONError(w, "failed to fetch courses", http.StatusInternalServerError)
 		return
@@ -103,7 +99,8 @@ func (h *CourseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	c.ID = id
 
-	updatedCourse, err := h.svc.UpdateCourse(&c)
+	ctx := r.Context()
+	updatedCourse, err := h.svc.UpdateCourse(ctx, &c)
 	if err != nil {
 		writeJSONError(w, "failed to update course", http.StatusInternalServerError)
 		return
@@ -124,7 +121,8 @@ func (h *CourseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deletedID, err := h.svc.DeleteCourse(id)
+	ctx := r.Context()
+	deletedID, err := h.svc.DeleteCourse(ctx, id)
 	if err != nil {
 		writeJSONError(w, "failed to delete course", http.StatusInternalServerError)
 		return

@@ -2,17 +2,34 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"golang-entrypoint/internal/repository"
+	"golang-entrypoint/internal/domain"
 
 	"github.com/stretchr/testify/assert"
 )
 
+type mockStudentService struct{}
+
+func (m *mockStudentService) CreateStudent(_ context.Context, _ *domain.Student) (*domain.Student, error) {
+	return nil, nil
+}
+func (m *mockStudentService) GetStudentByID(_ context.Context, _ int) (*domain.Student, error) {
+	return nil, nil
+}
+func (m *mockStudentService) GetAllStudents(_ context.Context) ([]domain.Student, error) {
+	return nil, nil
+}
+func (m *mockStudentService) UpdateStudent(_ context.Context, _ *domain.Student) (*domain.Student, error) {
+	return nil, nil
+}
+func (m *mockStudentService) DeleteStudent(_ context.Context, _ int) (int, error) { return 0, nil }
+
 func TestStudentHandler_Create_InvalidJSON(t *testing.T) {
-	h := NewStudentHandler(&repository.StudentRepository{})
+	h := NewStudentHandler(&mockStudentService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBuffer([]byte(`{bad json`)))
 	rec := httptest.NewRecorder()
@@ -24,7 +41,7 @@ func TestStudentHandler_Create_InvalidJSON(t *testing.T) {
 }
 
 func TestStudentHandler_Create_MissingFields(t *testing.T) {
-	h := NewStudentHandler(&repository.StudentRepository{})
+	h := NewStudentHandler(&mockStudentService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBuffer([]byte(`{"first_name": "John"}`)))
 	rec := httptest.NewRecorder()

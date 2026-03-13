@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"golang-entrypoint/internal/service"
 	"log"
 	"log/slog"
 	"net/http"
@@ -15,7 +14,7 @@ import (
 	"golang-entrypoint/internal/database"
 	"golang-entrypoint/internal/handlers"
 	"golang-entrypoint/internal/repository"
-	_ "golang-entrypoint/internal/service"
+	"golang-entrypoint/internal/service"
 	"golang-entrypoint/pkg/middleware"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -45,7 +44,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := m.Up(); err != nil {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		log.Fatal(err)
 	}
 	slog.Info("Migrations applied")
@@ -55,12 +54,15 @@ func main() {
 	courseRepo := repository.NewCourseRepository(db)
 	enrollmentRepo := repository.NewEnrollmentRepository(db)
 
+	studentService := service.NewStudentService(studentRepo)
+	teacherService := service.NewTeacherService(teacherRepo)
 	courseService := service.NewCourseService(courseRepo)
+	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
 
-	studentHandler := handlers.NewStudentHandler(studentRepo)
-	teacherHandler := handlers.NewTeacherHandler(teacherRepo)
+	studentHandler := handlers.NewStudentHandler(studentService)
+	teacherHandler := handlers.NewTeacherHandler(teacherService)
 	courseHandler := handlers.NewCourseHandler(courseService)
-	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentRepo)
+	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentService)
 
 	mux := http.NewServeMux()
 

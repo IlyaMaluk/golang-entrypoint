@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"database/sql"
 	"golang-entrypoint/internal/models"
 )
@@ -13,29 +14,31 @@ func NewCourseRepository(db *sql.DB) *CourseRepository {
 	return &CourseRepository{db: db}
 }
 
-func (r *CourseRepository) CreateCourse(c *models.Course) (int, error) {
-	var id int
-	query := `INSERT INTO courses (title, description, teacher_id) VALUES ($1, $2, $3) RETURNING id`
-	err := r.db.QueryRow(query, c.Title, c.Description, c.TeacherID).Scan(&id)
+func (r *CourseRepository) CreateCourse(ctx context.Context, c *models.Course) (*models.Course, error) {
+	query := `INSERT INTO courses (title, description, teacher_id) VALUES ($1, $2, $3) RETURNING id, title, description, teacher_id`
+	created := &models.Course{}
+	err := r.db.QueryRowContext(ctx, query, c.Title, c.Description, c.TeacherID).Scan(
+		&created.ID, &created.Title, &created.Description, &created.TeacherID,
+	)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return id, nil
+	return created, nil
 }
 
-func (r *CourseRepository) GetCourseByID(id int) (*models.Course, error) {
+func (r *CourseRepository) GetCourseByID(ctx context.Context, id int) (*models.Course, error) {
 	query := `SELECT id, title, description, teacher_id FROM courses WHERE id = $1`
 	c := &models.Course{}
-	err := r.db.QueryRow(query, id).Scan(&c.ID, &c.Title, &c.Description, &c.TeacherID)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&c.ID, &c.Title, &c.Description, &c.TeacherID)
 	if err != nil {
 		return nil, err
 	}
 	return c, nil
 }
 
-func (r *CourseRepository) GetAllCourses() ([]models.Course, error) {
+func (r *CourseRepository) GetAllCourses(ctx context.Context) ([]models.Course, error) {
 	query := `SELECT id, title, description, teacher_id FROM courses`
-	rows, err := r.db.Query(query)
+	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -52,14 +55,20 @@ func (r *CourseRepository) GetAllCourses() ([]models.Course, error) {
 	return courses, nil
 }
 
-func (r *CourseRepository) UpdateCourse(c *models.Course) error {
-	query := `UPDATE courses SET title = $1, description = $2, teacher_id = $3 WHERE id = $4`
-	_, err := r.db.Exec(query, c.Title, c.Description, c.TeacherID, c.ID)
-	return err
+func (r *CourseRepository) UpdateCourse(ctx context.Context, c *models.Course) (*models.Course, error) {
+	query := `UPDATE courses SET title = $1, description = $2, teacher_id = $3 WHERE id = $4 RETURNING id, title, description, teacher_id`
+	updated := &models.Course{}
+	err := r.db.QueryRowContext(ctx, query, c.Title, c.Description, c.TeacherID, c.ID).Scan(
+		&updated.ID, &updated.Title, &updated.Description, &updated.TeacherID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return updated, nil
 }
 
-func (r *CourseRepository) DeleteCourse(id int) error {
+func (r *CourseRepository) DeleteCourse(ctx context.Context, id int) error {
 	query := `DELETE FROM courses WHERE id = $1`
-	_, err := r.db.Exec(query, id)
+	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
