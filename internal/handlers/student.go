@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"golang-entrypoint/internal/service"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -19,17 +20,37 @@ type StudentService interface {
 }
 
 type StudentHandler struct {
-	svc StudentService
+	svc              StudentService
+	validatorService service.ValidatorService
 }
 
-func NewStudentHandler(svc StudentService) *StudentHandler {
-	return &StudentHandler{svc: svc}
+func NewStudentHandler(
+	svc StudentService,
+	validatorService service.ValidatorService,
+) *StudentHandler {
+	return &StudentHandler{
+		svc:              svc,
+		validatorService: validatorService,
+	}
 }
 
 func (h *StudentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var s domain.Student
 	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
 		writeJSONError(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	validationErrors, err := h.validatorService.Validate(s)
+	if err != nil {
+		writeJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(validationErrors) > 0 {
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(validationErrors)
 		return
 	}
 

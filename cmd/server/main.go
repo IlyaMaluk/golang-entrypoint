@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/go-playground/validator/v10"
 	"log"
 	"log/slog"
 	"net/http"
@@ -58,10 +59,11 @@ func main() {
 	teacherService := service.NewTeacherService(teacherRepo)
 	courseService := service.NewCourseService(courseRepo)
 	enrollmentService := service.NewEnrollmentService(enrollmentRepo)
+	validationService := service.NewValidatorService(validator.New())
 
-	studentHandler := handlers.NewStudentHandler(studentService)
+	studentHandler := handlers.NewStudentHandler(studentService, validationService)
 	teacherHandler := handlers.NewTeacherHandler(teacherService)
-	courseHandler := handlers.NewCourseHandler(courseService)
+	courseHandler := handlers.NewCourseHandler(courseService, validationService)
 	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentService)
 
 	mux := http.NewServeMux()
